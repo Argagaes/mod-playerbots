@@ -462,6 +462,11 @@ AiPlayerbot.DropObsoleteQuests = 1
 # COMBAT
 #
 
+# Prevent ungrouped bots from autonomously targeting rare and rare-elite creatures while grinding or retaliating.
+# Player-directed attacks and pulls are still allowed, and the restriction does not apply while in a group or raid.
+# Default: 1 (enabled)
+AiPlayerbot.AvoidRaresWhenSolo = 1
+
 # Auto add dungeon/raid strategies when entering the instance if implemented
 AiPlayerbot.ApplyInstanceStrategies = 1
 

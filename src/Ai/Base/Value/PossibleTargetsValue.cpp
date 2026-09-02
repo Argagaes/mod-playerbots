@@ -43,6 +43,9 @@ bool PossibleTargetsValue::AcceptUnit(Unit* unit)
     if (!AttackersValue::IsPossibleTarget(unit, bot, range))
         return false;
 
+    if (AttackersValue::ShouldAvoidRareWhenSolo(unit, bot))
+        return false;
+
     // Level-based PvP restrictions
     if (unit->IsPlayer())
     {

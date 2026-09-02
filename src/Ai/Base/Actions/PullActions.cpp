@@ -266,7 +266,10 @@ bool PullEndAction::Execute(Event /*event*/)
     if (pullPosition.isSet())
         posMap.erase("pull");
 
-    if (pullTarget && context->GetValue<Unit*>("current target")->Get() == pullTarget)
+    // Autonomous target selection excludes solo rares, so a rare pull reaching this point was player-directed.
+    // Keep it as the current target after the pull phase so normal combat actions can finish the requested fight.
+    if (pullTarget && context->GetValue<Unit*>("current target")->Get() == pullTarget &&
+        !AttackersValue::ShouldAvoidRareWhenSolo(pullTarget, bot))
         context->GetValue<Unit*>("current target")->Set(nullptr);
 
     strategy->OnPullEnded();

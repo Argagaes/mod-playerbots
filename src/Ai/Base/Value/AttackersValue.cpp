@@ -109,7 +109,11 @@ void AttackersValue::RemoveNonThreating(std::unordered_set<Unit*>& targets)
     for (std::unordered_set<Unit*>::iterator tIter = targets.begin(); tIter != targets.end();)
     {
         Unit* unit = *tIter;
-        if (bot->GetMapId() != unit->GetMapId() || !hasRealThreat(unit) || !IsValidTarget(unit, bot))
+        bool const avoidRare = ShouldAvoidRareWhenSolo(unit, bot);
+        if (avoidRare)
+            StopUncommandedPetsAttacking(unit);
+
+        if (avoidRare || bot->GetMapId() != unit->GetMapId() || !hasRealThreat(unit) || !IsValidTarget(unit, bot))
         {
             std::unordered_set<Unit*>::iterator tIter2 = tIter;
             ++tIter;
@@ -117,6 +121,49 @@ void AttackersValue::RemoveNonThreating(std::unordered_set<Unit*>& targets)
         }
         else
             ++tIter;
+    }
+}
+
+bool AttackersValue::ShouldAvoidRareWhenSolo(Unit* target, Player* bot)
+{
+    if (!sPlayerbotAIConfig.avoidRaresWhenSolo || !target || !bot || bot->GetGroup())
+        return false;
+
+    Creature* creature = target->ToCreature();
+    if (!creature)
+        return false;
+
+    CreatureTemplate const* creatureTemplate = creature->GetCreatureTemplate();
+    if (!creatureTemplate)
+        return false;
+
+    return creatureTemplate->rank == CREATURE_ELITE_RARE ||
+           creatureTemplate->rank == CREATURE_ELITE_RAREELITE;
+}
+
+void AttackersValue::StopUncommandedPetsAttacking(Unit* target)
+{
+    if (context->GetValue<Unit*>("current target")->Get() == target)
+        return;
+
+    GuidVector prioritizedTargets = context->GetValue<GuidVector>("prioritized targets")->Get();
+    if (std::find(prioritizedTargets.begin(), prioritizedTargets.end(), target->GetGUID()) !=
+        prioritizedTargets.end())
+        return;
+
+    for (Unit* controlled : bot->m_Controlled)
+    {
+        Creature* creature = controlled ? controlled->ToCreature() : nullptr;
+        if (!creature || creature->GetVictim() != target)
+            continue;
+
+        CharmInfo* charmInfo = creature->GetCharmInfo();
+        if (charmInfo && charmInfo->IsCommandAttack())
+            continue;
+
+        creature->AttackStop();
+        if (charmInfo)
+            charmInfo->SetIsCommandAttack(false);
     }
 }
 

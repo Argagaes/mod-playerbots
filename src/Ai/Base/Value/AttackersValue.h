@@ -21,6 +21,7 @@ public:
     AttackersValue(PlayerbotAI* botAI) : ObjectGuidListCalculatedValue(botAI, "attackers", 1 * 1000) {}
 
     GuidVector Calculate();
+    static bool ShouldAvoidRareWhenSolo(Unit* target, Player* bot);
     static bool IsPossibleTarget(Unit* attacker, Player* bot, float range = sPlayerbotAIConfig.sightDistance);
     static bool IsValidTarget(Unit* attacker, Player* bot);
 
@@ -28,6 +29,7 @@ private:
     void AddAttackersOf(Group* group, std::unordered_set<Unit*>& targets);
     void AddAttackersOf(Player* player, std::unordered_set<Unit*>& targets);
     void RemoveNonThreating(std::unordered_set<Unit*>& targets);
+    void StopUncommandedPetsAttacking(Unit* target);
     bool hasRealThreat(Unit* attacker);
 };
 
